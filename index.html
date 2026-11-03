@@ -4,366 +4,698 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Command Center</title>
-    <!-- Tailwind CSS CDN with Standard CSS Fallback -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; }
-        .dark body { background-color: #020617; color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
 
-    <!-- Top Navigation Header -->
-    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
-                <i class="fa-solid fa-graduation-cap text-lg"></i>
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Branding -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('main')">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg leading-none tracking-tight text-slate-900">Academia Command</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Planner, Live Stopwatch & Lofi Player</p>
+                </div>
             </div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight">Academic Command Center</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400">High School Senior Dashboard</p>
-            </div>
-        </div>
 
-        <div class="flex items-center space-x-4">
-            <!-- Subject Subtabs -->
-            <div id="subject-tabs" class="hidden md:flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                <button onclick="switchTab('main')" id="tab-btn-main" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-700 shadow-sm transition">
-                    <i class="fa-solid fa-house mr-1"></i> Dashboard
+            <!-- Subject Subtabs Nav Bar -->
+            <div class="flex items-center space-x-1 overflow-x-auto custom-scrollbar py-1" id="subject-tabs-container">
+                <!-- Dynamic tabs -->
+            </div>
+
+            <!-- Right Action Bar -->
+            <div class="flex items-center space-x-2">
+                <button onclick="switchTab('manage-subjects')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-gear text-xs"></i>
+                    <span>Manage Subjects</span>
+                </button>
+                <button onclick="openSubjectModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Add Subject</span>
                 </button>
             </div>
 
-            <!-- Add Subject Button -->
-            <button onclick="openModal('subject-modal')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Subject</span>
-            </button>
         </div>
     </header>
 
-    <!-- Main Workspace Layout -->
-    <div class="flex-1 flex flex-col md:flex-row">
-        
-        <!-- Main Content Area -->
-        <main id="main-content-area" class="flex-1 p-6 space-y-6">
-            <!-- Dynamically Rendered -->
+    <!-- LIVE STUDY TIMER TOP FLOATING BAR -->
+    <div id="live-timer-banner" class="bg-slate-900 text-white px-4 py-2.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-3">
+            <span class="flex items-center space-x-1.5 font-bold uppercase tracking-wider text-indigo-300">
+                <span id="live-timer-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                <span>Live Study Stopwatch:</span>
+            </span>
+            <select id="timer-subject-select" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs outline-none focus:ring-1 focus:ring-indigo-400">
+                <!-- Dynamically populated -->
+            </select>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div id="stopwatch-display" class="font-mono text-lg font-extrabold tracking-widest text-indigo-200">
+                00:00:00
+            </div>
+            <button id="timer-toggle-btn" onclick="toggleStudyTimer()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition flex items-center space-x-1.5">
+                <i id="timer-toggle-icon" class="fa-solid fa-play text-xs"></i>
+                <span id="timer-toggle-text">Start Studying</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN APP LAYOUT CONTAINER -->
+    <div class="flex-1 max-w-7xl mx-auto w-full flex flex-col lg:flex-row p-4 md:p-6 gap-6 overflow-hidden">
+
+        <!-- LEFT WORKSPACE AREA -->
+        <main id="workspace-view" class="flex-1 space-y-6 overflow-y-auto">
+            <!-- Dynamic workspace content rendered here -->
         </main>
 
-        <!-- Daily Sidebar & Study Stopwatch -->
-        <aside class="w-full md:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-6 flex flex-col space-y-6 shrink-0">
+        <!-- RIGHT SIDEBAR -->
+        <aside id="daily-sidebar" class="w-full lg:w-80 shrink-0 bg-white border border-slate-200 rounded-2xl p-5 space-y-6 shadow-sm self-start">
             
-            <!-- Live Study Stopwatch Widget -->
-            <div class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-5 text-white shadow-lg">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-bold text-sm flex items-center space-x-2">
-                        <i class="fa-solid fa-stopwatch"></i>
-                        <span>Study Stopwatch</span>
-                    </h3>
-                    <span id="timer-status-badge" class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold">Ready</span>
+            <!-- LOFI MUSIC PLAYER WIDGET -->
+            <div class="bg-slate-900 text-white rounded-xl p-4 space-y-3 shadow-md">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-headphones text-indigo-400"></i>
+                        <span class="font-bold text-xs">Lofi Radio Stream</span>
+                    </div>
+                    <span id="lofi-status" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">Paused</span>
                 </div>
-                
-                <div class="space-y-3">
-                    <select id="timer-subject-select" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-xs text-white outline-none">
-                        <!-- Populated via JS -->
-                    </select>
-                    
-                    <div class="text-center py-2">
-                        <div id="stopwatch-display" class="text-3xl font-mono font-ext500 font-bold tracking-wider">00:00:00</div>
-                    </div>
-
-                    <div class="flex space-x-2">
-                        <button id="timer-toggle-btn" onclick="toggleStudyTimer()" class="flex-1 py-2 bg-white text-indigo-600 hover:bg-indigo-50 font-bold text-xs rounded-xl shadow transition">
-                            <i class="fa-solid fa-play mr-1"></i> Start Studying
-                        </button>
-                        <button onclick="resetStudyTimer()" class="px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs rounded-xl transition" title="Reset">
-                            <i class="fa-solid fa-rotate-right"></i>
-                        </button>
-                    </div>
+                <audio id="lofi-audio-player" src="https://stream.zeno.fm/f3wvbbqmdg8uv" preload="none"></audio>
+                <div class="flex items-center justify-between pt-1">
+                    <button onclick="toggleLofiMusic()" id="lofi-btn" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition flex items-center justify-center space-x-2">
+                        <i id="lofi-btn-icon" class="fa-solid fa-play"></i>
+                        <span id="lofi-btn-text">Play Lofi Beats</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Upcoming Assignments -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-calendar-day text-indigo-600"></i>
+                    <h2 class="font-bold text-sm">Daily Command View</h2>
+                </div>
+                <span id="sidebar-date-label" class="text-xs text-slate-400 font-medium"></span>
+            </div>
+
+            <!-- Upcoming Assignments (Rest of Week) -->
             <div class="space-y-3">
-                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Upcoming This Week</h3>
-                <div id="sidebar-upcoming-list" class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-clock text-amber-500"></i>
+                        <span>Due Next 7 Days</span>
+                    </h3>
+                    <span id="upcoming-badge-count" class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="upcoming-tasks-container" class="space-y-2">
                     <!-- Populated via JS -->
                 </div>
             </div>
 
-            <!-- Time Blocks -->
+            <hr class="border-slate-100">
+
+            <!-- Daily Time-Blocker Widget -->
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Daily Time Blocks</h3>
-                    <button onclick="openModal('time-block-modal')" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">+ Add Block</button>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-layer-group text-indigo-500"></i>
+                        <span>Hourly Time Blocks</span>
+                    </h3>
+                    <button onclick="openTimeBlockModal()" class="text-xs text-indigo-600 font-semibold hover:underline">+ Block</button>
                 </div>
-                <div id="time-blocks-container" class="space-y-2">
+                <div id="time-blocks-list" class="space-y-2">
                     <!-- Populated via JS -->
                 </div>
             </div>
         </aside>
+
     </div>
 
-    <!-- Modals -->
-    <!-- Assignment Modal -->
-    <div id="assignment-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <h3 class="font-bold text-lg mb-4">Add Assignment / Test</h3>
-            <form onsubmit="handleAssignmentSubmit(event)" class="space-y-4">
+    <!-- MODAL: ADD ASSIGNMENT / TEST -->
+    <div id="assignment-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md border border-slate-200 shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-base">Add Assignment or Exam</h3>
+                <button onclick="closeModal('assignment-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleAssignmentSubmit(event)" class="p-5 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Title</label>
-                    <input type="text" id="asg-title" required class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Title</label>
+                    <input type="text" id="asg-title" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Chapter 4 Integration Test">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Subject</label>
-                        <select id="asg-subject" class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none"></select>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Subject</label>
+                        <select id="asg-subject" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Type</label>
-                        <select id="asg-type" class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
-                            <option value="homework">Homework</option>
-                            <option value="test">Test / Exam</option>
-                            <option value="project">Project</option>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Type Label</label>
+                        <select id="asg-type" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Homework">Homework</option>
+                            <option value="Test">Test / Exam</option>
+                            <option value="Assignment">Assignment</option>
+                            <option value="Project">Project</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Due Date</label>
-                    <input type="date" id="asg-date" required class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Due Date</label>
+                    <input type="date" id="asg-date" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('assignment-modal')" class="px-4 py-2 text-xs font-semibold text-slate-500">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-xl">Save</button>
+                    <button type="button" onclick="closeModal('assignment-modal')" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow">Save Item</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Subject Modal -->
-    <div id="subject-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <h3 class="font-bold text-lg mb-4">Add New Subject</h3>
-            <form onsubmit="handleSubjectSubmit(event)" class="space-y-4">
+    <!-- MODAL: ADD SUBJECT -->
+    <div id="subject-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm border border-slate-200 shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-base">Create New Subject</h3>
+                <button onclick="closeModal('subject-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleSubjectSubmit(event)" class="p-5 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Subject Name</label>
-                    <input type="text" id="sub-name" required placeholder="e.g. AP Physics C" class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Subject Name</label>
+                    <input type="text" id="sub-name" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. AP Physics C">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Weekly Target Goal (Hours)</label>
+                    <input type="number" id="sub-goal" min="1" max="100" value="8" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('subject-modal')" class="px-4 py-2 text-xs font-semibold text-slate-500">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-xl">Create</button>
+                    <button type="button" onclick="closeModal('subject-modal')" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow">Create Subject</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Time Block Modal -->
-    <div id="time-block-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <h3 class="font-bold text-lg mb-4">Add Time Block</h3>
-            <form onsubmit="handleTimeBlockSubmit(event)" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+    <!-- MODAL: TIME BLOCK -->
+    <div id="time-block-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm border border-slate-200 shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-base">Add Daily Time Block</h3>
+                <button onclick="closeModal('time-block-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleTimeBlockSubmit(event)" class="p-5 space-y-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Start</label>
-                        <input type="time" id="tb-start" required class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Start Time</label>
+                        <input type="time" id="tb-start" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">End</label>
-                        <input type="time" id="tb-end" required class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">End Time</label>
+                        <input type="time" id="tb-end" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Task</label>
-                    <input type="text" id="tb-task" required class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Activity / Focus Area</label>
+                    <input type="text" id="tb-task" required placeholder="e.g. Read Ch. 4 or Problem Set" class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Subject</label>
-                    <select id="tb-subject" class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none"></select>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Subject Tag</label>
+                    <select id="tb-subject" required class="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
                 </div>
                 <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeModal('time-block-modal')" class="px-4 py-2 text-xs font-semibold text-slate-500">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-xl">Add</button>
+                    <button type="button" onclick="closeModal('time-block-modal')" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow">Save Block</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
-        let appData = JSON.parse(localStorage.getItem('academic_dashboard_data')) || {
-            subjects: [
-                { id: 'math', name: 'AP Calculus BC', goalHours: 5, loggedHours: 3.5 },
-                { id: 'chem', name: 'AP Chemistry', goalHours: 6, loggedHours: 4.0 }
-            ],
-            assignments: [
-                { id: '1', title: 'Problem Set 4', subject: 'math', type: 'homework', date: new Date().toISOString().split('T')[0], completed: false }
-            ],
-            timeBlocks: []
-        };
+        const STORAGE_KEY = 'ACADEMIA_CENTER_LIGHT_V3';
 
-        let activeTab = 'main';
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-
-        // Stopwatch variables
-        let timerInterval = null;
-        let stopwatchSeconds = 0;
-        let isStudying = false;
-
-        function saveData() {
-            localStorage.setItem('academic_dashboard_data', JSON.stringify(appData));
+        function getLocalDateString(dateObj = new Date()) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
+        function getFormattedDateOffset(offsetDays) {
+            const d = new Date();
+            d.setDate(d.getDate() + offsetDays);
+            return getLocalDateString(d);
+        }
+
+        // INITIAL DEFAULT DATA (Log times reset to 0.0 hrs)
+        let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+            activeTab: 'main',
+            filterType: 'all',
+            currentMonth: new Date().getMonth(),
+            currentYear: new Date().getFullYear(),
+            timer: {
+                running: false,
+                seconds: 0
+            },
+            subjects: [
+                { id: 'ap-calc', name: 'AP Calculus BC', weeklyGoal: 8, loggedHours: 0.0 },
+                { id: 'ap-chem', name: 'AP Chemistry', weeklyGoal: 6, loggedHours: 0.0 },
+                { id: 'ap-phys', name: 'AP Physics C', weeklyGoal: 8, loggedHours: 0.0 },
+                { id: 'ap-lit', name: 'AP Lit', weeklyGoal: 5, loggedHours: 0.0 }
+            ],
+            tasks: [
+                { id: 't1', title: 'Derivatives Practice Test', subjectId: 'ap-calc', type: 'Test', date: getFormattedDateOffset(1), completed: false },
+                { id: 't2', title: 'Lab Report: Titration Curves', subjectId: 'ap-chem', type: 'Assignment', date: getFormattedDateOffset(2), completed: false },
+                { id: 't3', title: 'Hamlet Essay Outline', subjectId: 'ap-lit', type: 'Homework', date: getFormattedDateOffset(0), completed: false },
+                { id: 't4', title: 'Rotational Motion Quiz', subjectId: 'ap-phys', type: 'Test', date: getFormattedDateOffset(4), completed: false }
+            ],
+            timeBlocks: [
+                { id: 'tb1', start: '14:00', end: '15:30', task: 'Calc AP Review', subjectId: 'ap-calc' }
+            ]
+        };
+
+        let timerInterval = null;
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        // --- LOFI AUDIO PLAYER CONTROLLER ---
+        function toggleLofiMusic() {
+            const audio = document.getElementById('lofi-audio-player');
+            const icon = document.getElementById('lofi-btn-icon');
+            const text = document.getElementById('lofi-btn-text');
+            const status = document.getElementById('lofi-status');
+
+            if (audio.paused) {
+                audio.play();
+                icon.className = 'fa-solid fa-pause';
+                text.innerText = 'Pause Lofi Beats';
+                status.innerText = 'Playing';
+                status.className = 'text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold';
+            } else {
+                audio.pause();
+                icon.className = 'fa-solid fa-play';
+                text.innerText = 'Play Lofi Beats';
+                status.innerText = 'Paused';
+                status.className = 'text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full';
+            }
+        }
+
+        // --- LIVE STOPWATCH TIMER ---
+        function toggleStudyTimer() {
+            const toggleBtn = document.getElementById('timer-toggle-btn');
+            const toggleText = document.getElementById('timer-toggle-text');
+            const toggleIcon = document.getElementById('timer-toggle-icon');
+            const dot = document.getElementById('live-timer-dot');
+
+            if (!state.timer.running) {
+                state.timer.running = true;
+                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
+                toggleBtn.className = "px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm transition flex items-center space-x-1.5";
+                toggleText.innerText = "Stop & Log Hours";
+                toggleIcon.className = "fa-solid fa-stop text-xs";
+
+                timerInterval = setInterval(() => {
+                    state.timer.seconds++;
+                    updateStopwatchDisplay();
+                }, 1000);
+            } else {
+                state.timer.running = false;
+                clearInterval(timerInterval);
+
+                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-500";
+                toggleBtn.className = "px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition flex items-center space-x-1.5";
+                toggleText.innerText = "Start Studying";
+                toggleIcon.className = "fa-solid fa-play text-xs";
+
+                const elapsedHours = parseFloat((state.timer.seconds / 3600).toFixed(2));
+                const subjectId = document.getElementById('timer-subject-select').value;
+                const subj = state.subjects.find(s => s.id === subjectId);
+
+                if (subj && elapsedHours > 0) {
+                    subj.loggedHours = parseFloat((subj.loggedHours + elapsedHours).toFixed(2));
+                    saveData();
+                    alert(`Great job! Logged ${elapsedHours} hours (${Math.round(state.timer.seconds / 60)} mins) to ${subj.name}.`);
+                }
+
+                state.timer.seconds = 0;
+                updateStopwatchDisplay();
+                render();
+            }
+        }
+
+        function updateStopwatchDisplay() {
+            const hrs = Math.floor(state.timer.seconds / 3600);
+            const mins = Math.floor((state.timer.seconds % 3600) / 60);
+            const secs = state.timer.seconds % 60;
+            document.getElementById('stopwatch-display').innerText = 
+                `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+
+        // --- TAB SWITCHING ---
         function switchTab(tabId) {
-            activeTab = tabId;
+            state.activeTab = tabId;
             render();
         }
 
+        function setFilterType(type) {
+            state.filterType = type;
+            render();
+        }
+
+        // --- MAIN RENDER FUNCTION ---
         function render() {
-            renderTabs();
+            renderNavTabs();
             renderSidebar();
-            populateSelects();
+            populateSelectOptions();
 
-            const area = document.getElementById('main-content-area');
-            if (activeTab === 'main') {
-                area.innerHTML = `
-                    <div class="max-w-5xl mx-auto space-y-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h2 class="text-2xl font-bold">Dashboard</h2>
-                                <p class="text-xs text-slate-500">Global academic calendar and assignments.</p>
-                            </div>
-                            <button onclick="openModal('assignment-modal')" class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl shadow">+ Add Item</button>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-bold text-sm">Monthly Calendar</h3>
-                                <div class="flex space-x-2">
-                                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 text-xs"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 text-xs"><i class="fa-solid fa-chevron-right"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-400 mb-2">
-                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-                            </div>
-                            <div class="grid grid-cols-7 gap-2">${generateCalendar(null)}</div>
-                        </div>
-                    </div>
-                `;
+            const workspace = document.getElementById('workspace-view');
+            if (state.activeTab === 'main') {
+                workspace.innerHTML = renderMainDashboardHTML();
+            } else if (state.activeTab === 'manage-subjects') {
+                workspace.innerHTML = renderManageSubjectsHTML();
             } else {
-                const sub = appData.subjects.find(s => s.id === activeTab);
-                if (sub) {
-                    const pct = Math.min(100, Math.round((sub.loggedHours / sub.goalHours) * 100));
-                    let trophy = { icon: 'fa-medal text-amber-600', label: 'Bronze Learner' };
-                    if (pct >= 100) trophy = { icon: 'fa-trophy text-amber-400 animate-bounce', label: 'Gold Champion' };
-                    else if (pct >= 50) trophy = { icon: 'fa-award text-slate-300', label: 'Silver Achiever' };
-
-                    area.innerHTML = `
-                        <div class="max-w-5xl mx-auto space-y-6">
-                            <div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-xl flex items-center justify-between">
-                                <div>
-                                    <span class="text-[10px] bg-white/20 px-2.5 py-1 rounded-full font-bold uppercase">Subject Workspace</span>
-                                    <h2 class="text-3xl font-bold mt-1">${sub.name}</h2>
-                                </div>
-                                <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-3 flex items-center space-x-3">
-                                    <i class="fa-solid ${trophy.icon} text-2xl"></i>
-                                    <div>
-                                        <div class="text-xs font-bold">${trophy.label}</div>
-                                        <div class="text-[10px] text-indigo-100">${sub.loggedHours} / ${sub.goalHours} hrs logged</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-                                    <div>
-                                        <h3 class="font-bold text-sm mb-1">Weekly Goal Progress</h3>
-                                        <div class="text-2xl font-bold mt-2">${pct}%</div>
-                                    </div>
-                                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full my-4 overflow-hidden">
-                                        <div class="bg-indigo-600 h-full rounded-full transition-all" style="width: ${pct}%"></div>
-                                    </div>
-                                    <button onclick="editGoal('${sub.id}')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-xl">Edit Goal Hours</button>
-                                </div>
-                                <div class="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="font-bold text-sm">Subject Calendar & Assignments</h3>
-                                        <button onclick="openModalForSubject('${sub.id}')" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-xl">+ Add Item</button>
-                                    </div>
-                                    <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-400 mb-2">
-                                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-                                    </div>
-                                    <div class="grid grid-cols-7 gap-2">${generateCalendar(sub.id)}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                const subject = state.subjects.find(s => s.id === state.activeTab);
+                if (subject) {
+                    workspace.innerHTML = renderSubjectDashboardHTML(subject);
                 } else {
                     switchTab('main');
                 }
             }
         }
 
-        function renderTabs() {
-            let html = `<button onclick="switchTab('main')" id="tab-btn-main" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'main' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-500'}"><i class="fa-solid fa-house mr-1"></i> Dashboard</button>`;
-            appData.subjects.forEach(sub => {
-                html += `<button onclick="switchTab('${sub.id}')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === sub.id ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-500'}">${sub.name}</button>`;
+        function renderNavTabs() {
+            const container = document.getElementById('subject-tabs-container');
+            let html = `
+                <button onclick="switchTab('main')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap ${state.activeTab === 'main' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    <i class="fa-solid fa-house mr-1"></i> Dashboard
+                </button>
+            `;
+            state.subjects.forEach(sub => {
+                const isActive = state.activeTab === sub.id;
+                html += `
+                    <button onclick="switchTab('${sub.id}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap ${isActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                        ${sub.name}
+                    </button>
+                `;
             });
-            document.getElementById('subject-tabs').innerHTML = html;
+            container.innerHTML = html;
         }
 
-        function populateSelects() {
-            const opts = appData.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            document.getElementById('asg-subject').innerHTML = opts;
-            document.getElementById('tb-subject').innerHTML = opts;
-            document.getElementById('timer-subject-select').innerHTML = opts;
+        function populateSelectOptions() {
+            const timerSelect = document.getElementById('timer-subject-select');
+            const asgSelect = document.getElementById('asg-subject');
+            const tbSelect = document.getElementById('tb-subject');
+
+            const optionsHTML = state.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            if (timerSelect) timerSelect.innerHTML = optionsHTML;
+            if (asgSelect) asgSelect.innerHTML = optionsHTML;
+            if (tbSelect) tbSelect.innerHTML = optionsHTML;
+
+            document.getElementById('sidebar-date-label').innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         }
 
+        // --- SIDEBAR RENDER (UPCOMING TASK LOGIC FIX) ---
         function renderSidebar() {
-            const today = new Date();
-            const upcoming = appData.assignments.filter(a => new Date(a.date) >= today && !a.completed);
+            const upcomingContainer = document.getElementById('upcoming-tasks-container');
             
-            document.getElementById('sidebar-upcoming-list').innerHTML = upcoming.length === 0 
-                ? `<p class="text-xs text-slate-400 italic">No upcoming items.</p>`
-                : upcoming.map(item => `
-                    <div class="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
-                        <div>
-                            <span class="font-bold">${item.title}</span>
-                            <div class="text-[10px] text-slate-400">Due ${item.date}</div>
-                        </div>
-                        <button onclick="toggleAssignment('${item.id}')" class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px] hover:bg-indigo-600 hover:text-white"><i class="fa-solid fa-check"></i></button>
-                    </div>
-                `).join('');
+            const today = new Date();
+            const todayStr = getLocalDateString(today);
 
-            document.getElementById('time-blocks-container').innerHTML = appData.timeBlocks.length === 0
-                ? `<p class="text-xs text-slate-400 italic">No time blocks added.</p>`
-                : appData.timeBlocks.map(tb => `
-                    <div class="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
-                        <div>
-                            <span class="font-bold text-indigo-600">${tb.start} - ${tb.end}</span>
-                            <div>${tb.task}</div>
+            const nextWeek = new Date();
+            nextWeek.setDate(today.getDate() + 7);
+            const nextWeekStr = getLocalDateString(nextWeek);
+
+            const upcoming = state.tasks
+                .filter(t => !t.completed && t.date >= todayStr && t.date <= nextWeekStr)
+                .sort((a,b) => a.date.localeCompare(b.date));
+
+            document.getElementById('upcoming-badge-count').innerText = upcoming.length;
+
+            if (upcoming.length === 0) {
+                upcomingContainer.innerHTML = `<p class="text-xs text-slate-400 py-2 italic text-center">No assignments due this week!</p>`;
+            } else {
+                upcomingContainer.innerHTML = upcoming.map(task => {
+                    const subj = state.subjects.find(s => s.id === task.subjectId) || { name: 'General' };
+                    return `
+                        <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between transition hover:border-indigo-300">
+                            <div class="truncate mr-2">
+                                <h4 class="text-xs font-bold text-slate-800 truncate">${task.title}</h4>
+                                <span class="text-[10px] text-indigo-600 font-semibold">${subj.name} • Due ${task.date}</span>
+                            </div>
+                            <button onclick="toggleTaskCompletion('${task.id}')" class="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition text-[10px]">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
                         </div>
-                        <button onclick="deleteTimeBlock('${tb.id}')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
+            }
+
+            // Time Blocks List
+            const tbContainer = document.getElementById('time-blocks-list');
+            if (state.timeBlocks.length === 0) {
+                tbContainer.innerHTML = `<p class="text-xs text-slate-400 py-2 italic text-center">No time blocks added.</p>`;
+            } else {
+                tbContainer.innerHTML = state.timeBlocks.map(tb => {
+                    const subj = state.subjects.find(s => s.id === tb.subjectId) || { name: 'Focus' };
+                    return `
+                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-indigo-600">${tb.start} - ${tb.end}</span>
+                                <h4 class="text-xs font-semibold text-slate-800">${tb.task}</h4>
+                                <span class="text-[10px] text-slate-400">${subj.name}</span>
+                            </div>
+                            <button onclick="deleteTimeBlock('${tb.id}')" class="text-slate-400 hover:text-rose-500 text-xs transition p-1">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
-        function generateCalendar(subjectFilter) {
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+        // --- MAIN DASHBOARD HTML ---
+        function renderMainDashboardHTML() {
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const currentMonthTitle = `${monthNames[state.currentMonth]} ${state.currentYear}`;
+
+            return `
+                <div class="space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Main Calendar View</h2>
+                            <p class="text-xs text-slate-500">Track all subjects, tests, and upcoming homework.</p>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Filter:</span>
+                            <div class="flex space-x-1">
+                                <button onclick="setFilterType('all')" class="px-2.5 py-1 rounded-lg text-xs font-semibold ${state.filterType === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">All</button>
+                                <button onclick="setFilterType('Homework')" class="px-2.5 py-1 rounded-lg text-xs font-semibold ${state.filterType === 'Homework' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">HW</button>
+                                <button onclick="setFilterType('Test')" class="px-2.5 py-1 rounded-lg text-xs font-semibold ${state.filterType === 'Test' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Exams</button>
+                                <button onclick="setFilterType('Assignment')" class="px-2.5 py-1 rounded-lg text-xs font-semibold ${state.filterType === 'Assignment' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Assignments</button>
+                            </div>
+                            <button onclick="openAssignmentModal()" class="ml-2 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Add Task</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Card -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                        <!-- CLEAR PROMINENT MONTH HEADER -->
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <h3 class="font-extrabold text-xl text-indigo-900">${currentMonthTitle}</h3>
+                            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                <button onclick="changeMonth(-1)" class="px-3 py-1 text-slate-700 hover:bg-white rounded-lg transition font-bold"><i class="fa-solid fa-chevron-left text-xs"></i> Prev</button>
+                                <button onclick="resetToday()" class="px-3 py-1 text-xs font-bold bg-white text-indigo-600 rounded-lg shadow-sm">Today</button>
+                                <button onclick="changeMonth(1)" class="px-3 py-1 text-slate-700 hover:bg-white rounded-lg transition font-bold">Next <i class="fa-solid fa-chevron-right text-xs"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Days Header -->
+                        <div class="grid grid-cols-7 gap-2 text-center text-xs font-extrabold text-slate-400 border-b border-slate-100 pb-2">
+                            <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+                        </div>
+
+                        <!-- Calendar Grid -->
+                        <div class="grid grid-cols-7 gap-2">
+                            ${generateCalendarDaysHTML(null)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- SUBJECT DASHBOARD HTML ---
+        function renderSubjectDashboardHTML(subject) {
+            const logged = subject.loggedHours || 0;
+            const target = subject.weeklyGoal || 1;
+            const percent = Math.min(100, Math.round((logged / target) * 100));
+
+            let trophyBadge = { icon: 'fa-award text-amber-700', title: 'Bronze Learner', label: 'Start study timer to unlock Silver!' };
+            if (percent >= 100) {
+                trophyBadge = { icon: 'fa-trophy text-amber-400 animate-bounce', title: 'Gold Champion', label: 'Weekly goal fully achieved!' };
+            } else if (percent >= 50) {
+                trophyBadge = { icon: 'fa-medal text-slate-400', title: 'Silver Achiever', label: 'Over 50% target completed' };
+            }
+
+            return `
+                <div class="space-y-6">
+                    <div class="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider font-bold px-2.5 py-1 rounded-full bg-white/20">Subject Workspace</span>
+                            <h2 class="text-3xl font-extrabold mt-1">${subject.name}</h2>
+                            <p class="text-xs text-indigo-100 mt-0.5">Track homework, tests, and study progress.</p>
+                        </div>
+
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3.5 flex items-center space-x-3">
+                            <div class="text-3xl"><i class="fa-solid ${trophyBadge.icon}"></i></div>
+                            <div>
+                                <h4 class="font-bold text-sm">${trophyBadge.title}</h4>
+                                <p class="text-[10px] text-indigo-100">${trophyBadge.label}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Goal Card -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-900">Weekly Goal Progress</h3>
+                                <p class="text-xs text-slate-500">Tracked via stopwatch</p>
+                            </div>
+
+                            <div class="flex items-center justify-between my-2">
+                                <div>
+                                    <span class="text-3xl font-extrabold text-indigo-600">${logged.toFixed(1)}</span>
+                                    <span class="text-xs text-slate-400 font-semibold">/ ${target} hrs</span>
+                                </div>
+                                <span class="text-2xl font-bold text-slate-700">${percent}%</span>
+                            </div>
+
+                            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2">
+                                <button onclick="manualLogTime('${subject.id}', 0.5)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-semibold rounded-lg transition">+30 Mins</button>
+                                <button onclick="manualLogTime('${subject.id}', 1.0)" class="px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs font-semibold rounded-lg transition">+1 Hour</button>
+                            </div>
+                        </div>
+
+                        <!-- Calendar Grid for Subject -->
+                        <div class="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <h3 class="font-bold text-sm text-slate-900">${subject.name} Tasks</h3>
+                                <button onclick="openAssignmentModalForSubject('${subject.id}')" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">+ Add Task</button>
+                            </div>
+
+                            <div class="grid grid-cols-7 gap-2 text-center text-xs font-extrabold text-slate-400 border-b border-slate-100 pb-2">
+                                <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+                            </div>
+
+                            <div class="grid grid-cols-7 gap-2">
+                                ${generateCalendarDaysHTML(subject.id)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MANAGE SUBJECTS TAB ---
+        function renderManageSubjectsHTML() {
+            return `
+                <div class="space-y-6 max-w-4xl mx-auto">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900">Manage Subjects</h2>
+                            <p class="text-xs text-slate-500">Edit subject titles, change weekly goal targets, or remove subjects.</p>
+                        </div>
+                        <button onclick="openSubjectModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow">+ Create Subject</button>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-2xl divide-y divide-slate-100 shadow-sm overflow-hidden">
+                        ${state.subjects.map(sub => `
+                            <div class="p-4 flex items-center justify-between gap-4 hover:bg-slate-50">
+                                <div>
+                                    <h3 class="font-bold text-base text-slate-900">${sub.name}</h3>
+                                    <p class="text-xs text-slate-500">Weekly Goal: <span class="font-semibold text-indigo-600">${sub.weeklyGoal} hours</span> | Logged: ${sub.loggedHours} hrs</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editSubjectDetails('${sub.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition">
+                                        <i class="fa-solid fa-pen mr-1"></i> Edit
+                                    </button>
+                                    <button onclick="deleteSubject('${sub.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition">
+                                        <i class="fa-solid fa-trash mr-1"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- CALENDAR GRID GENERATOR ---
+        function generateCalendarDaysHTML(subjectFilter) {
+            const firstDay = new Date(state.currentYear, state.currentMonth, 1).getDay();
+            const daysInMonth = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+            const todayStr = getLocalDateString(new Date());
             let html = '';
 
             for (let i = 0; i < firstDay; i++) {
-                html += `<div class="h-20 bg-slate-50/30 rounded-xl"></div>`;
+                html += `<div class="h-20 bg-slate-50/50 rounded-xl opacity-40 border border-slate-100"></div>`;
             }
-            for (let day = 1; day <= totalDays; day++) {
-                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const items = appData.assignments.filter(a => a.date === dateStr && (!subjectFilter || a.subject === subjectFilter));
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const isToday = dateStr === todayStr;
+
+                let dayTasks = state.tasks.filter(t => t.date === dateStr);
+                if (subjectFilter) {
+                    dayTasks = dayTasks.filter(t => t.subjectId === subjectFilter);
+                }
+                if (state.filterType !== 'all') {
+                    dayTasks = dayTasks.filter(t => t.type === state.filterType);
+                }
+
                 html += `
-                    <div class="h-20 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-1.5 flex flex-col justify-between overflow-y-auto">
-                        <span class="text-[10px] font-bold text-slate-400">${day}</span>
-                        <div class="space-y-0.5">
-                            ${items.map(i => `<div onclick="toggleAssignment('${i.id}')" class="text-[9px] px-1 rounded truncate cursor-pointer ${i.completed ? 'bg-emerald-500 text-white line-through' : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600'}">${i.title}</div>`).join('')}
+                    <div class="h-20 bg-white border ${isToday ? 'border-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200'} rounded-xl p-1.5 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+                        <span class="text-[11px] font-extrabold ${isToday ? 'text-indigo-600' : 'text-slate-400'}">${day}</span>
+                        <div class="space-y-1">
+                            ${dayTasks.map(t => `
+                                <div onclick="toggleTaskCompletion('${t.id}')" class="text-[9px] px-1 py-0.5 rounded font-medium truncate cursor-pointer transition ${t.completed ? 'bg-emerald-500 text-white line-through' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}">
+                                    ${t.title}
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
@@ -371,136 +703,134 @@
             return html;
         }
 
-        // Stopwatch Logic
-        function toggleStudyTimer() {
-            const btn = document.getElementById('timer-toggle-btn');
-            const badge = document.getElementById('timer-status-badge');
-            const subSelect = document.getElementById('timer-subject-select');
-
-            if (!isStudying) {
-                isStudying = true;
-                subSelect.disabled = true;
-                btn.innerHTML = `<i class="fa-solid fa-pause mr-1"></i> Stop & Save`;
-                btn.className = "flex-1 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow transition";
-                badge.innerText = "Studying...";
-                badge.className = "text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full font-bold animate-pulse";
-
-                timerInterval = setInterval(() => {
-                    stopwatchSeconds++;
-                    const hrs = String(Math.floor(stopwatchSeconds / 3600)).padStart(2, '0');
-                    const mins = String(Math.floor((stopwatchSeconds % 3600) / 60)).padStart(2, '0');
-                    const secs = String(stopwatchSeconds % 60).padStart(2, '0');
-                    document.getElementById('stopwatch-display').innerText = `${hrs}:${mins}:${secs}`;
-                }, 1000);
-            } else {
-                clearInterval(timerInterval);
-                isStudying = false;
-                subSelect.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-play mr-1"></i> Start Studying`;
-                btn.className = "flex-1 py-2 bg-white text-indigo-600 hover:bg-indigo-50 font-bold text-xs rounded-xl shadow transition";
-                badge.innerText = "Ready";
-                badge.className = "text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold";
-
-                // Add hours to selected subject
-                if (stopwatchSeconds > 0) {
-                    const hoursToAdd = parseFloat((stopwatchSeconds / 3600).toFixed(2));
-                    const subId = subSelect.value;
-                    const sub = appData.subjects.find(s => s.id === subId);
-                    if (sub) {
-                        sub.loggedHours = parseFloat((sub.loggedHours + hoursToAdd).toFixed(2));
-                        saveData();
-                        render();
-                        alert(`Successfully logged ${hoursToAdd} hours to ${sub.name}!`);
-                    }
-                    stopwatchSeconds = 0;
-                    document.getElementById('stopwatch-display').innerText = "00:00:00";
-                }
-            }
+        // --- CONTROLLERS & HANDLERS ---
+        function changeMonth(dir) {
+            state.currentMonth += dir;
+            if (state.currentMonth > 11) { state.currentMonth = 0; state.currentYear++; }
+            if (state.currentMonth < 0) { state.currentMonth = 11; state.currentYear--; }
+            render();
         }
 
-        function resetStudyTimer() {
-            clearInterval(timerInterval);
-            isStudying = false;
-            stopwatchSeconds = 0;
-            document.getElementById('stopwatch-display').innerText = "00:00:00";
-            document.getElementById('timer-subject-select').disabled = false;
-            document.getElementById('timer-toggle-btn').innerHTML = `<i class="fa-solid fa-play mr-1"></i> Start Studying`;
-            document.getElementById('timer-toggle-btn').className = "flex-1 py-2 bg-white text-indigo-600 font-bold text-xs rounded-xl shadow transition";
-            document.getElementById('timer-status-badge').innerText = "Ready";
-            document.getElementById('timer-status-badge').className = "text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold";
+        function resetToday() {
+            state.currentMonth = new Date().getMonth();
+            state.currentYear = new Date().getFullYear();
+            render();
         }
 
-        // Modal Controls
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
-        function openModalForSubject(subId) { openModal('assignment-modal'); document.getElementById('asg-subject').value = subId; }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+        }
 
-        // Form handlers
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function openAssignmentModal() { openModal('assignment-modal'); }
+        function openAssignmentModalForSubject(subjectId) {
+            openAssignmentModal();
+            document.getElementById('asg-subject').value = subjectId;
+        }
+        function openSubjectModal() { openModal('subject-modal'); }
+        function openTimeBlockModal() { openModal('time-block-modal'); }
+
         function handleAssignmentSubmit(e) {
             e.preventDefault();
-            appData.assignments.push({
-                id: Date.now().toString(),
+            const newTask = {
+                id: 't_' + Date.now(),
                 title: document.getElementById('asg-title').value,
-                subject: document.getElementById('asg-subject').value,
+                subjectId: document.getElementById('asg-subject').value,
                 type: document.getElementById('asg-type').value,
                 date: document.getElementById('asg-date').value,
                 completed: false
-            });
+            };
+            state.tasks.push(newTask);
             saveData();
             closeModal('assignment-modal');
+            document.getElementById('asg-title').value = '';
             render();
         }
 
         function handleSubjectSubmit(e) {
             e.preventDefault();
             const name = document.getElementById('sub-name').value;
-            const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (!appData.subjects.some(s => s.id === id)) {
-                appData.subjects.push({ id, name, goalHours: 5, loggedHours: 0 });
-                saveData();
-            }
+            const id = 'sub_' + Date.now();
+            const newSub = {
+                id,
+                name,
+                weeklyGoal: parseFloat(document.getElementById('sub-goal').value) || 8,
+                loggedHours: 0.0
+            };
+            state.subjects.push(newSub);
+            saveData();
             closeModal('subject-modal');
-            render();
+            document.getElementById('sub-name').value = '';
+            switchTab(id);
         }
 
         function handleTimeBlockSubmit(e) {
             e.preventDefault();
-            appData.timeBlocks.push({
-                id: Date.now().toString(),
+            const newTb = {
+                id: 'tb_' + Date.now(),
                 start: document.getElementById('tb-start').value,
                 end: document.getElementById('tb-end').value,
                 task: document.getElementById('tb-task').value,
-                subject: document.getElementById('tb-subject').value
-            });
+                subjectId: document.getElementById('tb-subject').value
+            };
+            state.timeBlocks.push(newTb);
             saveData();
             closeModal('time-block-modal');
+            document.getElementById('tb-task').value = '';
             render();
         }
 
-        function toggleAssignment(id) {
-            const a = appData.assignments.find(item => item.id === id);
-            if (a) { a.completed = !a.completed; saveData(); render(); }
+        function toggleTaskCompletion(id) {
+            const task = state.tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveData();
+                render();
+            }
         }
 
         function deleteTimeBlock(id) {
-            appData.timeBlocks = appData.timeBlocks.filter(tb => tb.id !== id);
+            state.timeBlocks = state.timeBlocks.filter(tb => tb.id !== id);
             saveData();
             render();
         }
 
-        function editGoal(subId) {
-            const sub = appData.subjects.find(s => s.id === subId);
-            const val = prompt(`New weekly goal hours for ${sub.name}:`, sub.goalHours);
-            if (val && !isNaN(val)) { sub.goalHours = parseFloat(val); saveData(); render(); }
+        function manualLogTime(subjectId, hours) {
+            const subj = state.subjects.find(s => s.id === subjectId);
+            if (subj) {
+                subj.loggedHours = parseFloat((subj.loggedHours + hours).toFixed(1));
+                saveData();
+                render();
+            }
         }
 
-        function changeMonth(dir) {
-            currentMonth += dir;
-            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-            render();
+        function editSubjectDetails(subjectId) {
+            const subj = state.subjects.find(s => s.id === subjectId);
+            if (subj) {
+                const newName = prompt("Edit subject name:", subj.name);
+                if (newName) subj.name = newName;
+                const newGoal = prompt("Edit weekly target goal (hours):", subj.weeklyGoal);
+                if (newGoal && !isNaN(newGoal)) subj.weeklyGoal = parseFloat(newGoal);
+                saveData();
+                render();
+            }
         }
 
+        function deleteSubject(subjectId) {
+            if (confirm("Are you sure you want to delete this subject and all its assigned tasks?")) {
+                state.subjects = state.subjects.filter(s => s.id !== subjectId);
+                state.tasks = state.tasks.filter(t => t.subjectId !== subjectId);
+                saveData();
+                switchTab('main');
+            }
+        }
+
+        // --- INITIAL RENDER ---
         render();
     </script>
 </body>
